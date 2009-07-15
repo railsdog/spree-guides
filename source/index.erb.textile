@@ -8,8 +8,8 @@ These guides are designed to make you immediately productive with Spree, and to 
 <% content_for :index_section do %>
 <div id="subCol">
   <dl>
-    <dd class="warning">Spree Guides are part of an ongoing documentation effort and are a work in progress.</dd>
-    <dd class="ticket">Guides marked with this icon are currently being worked on. While they might still be useful to you, they may contain incomplete information and even errors. You can help by reviewing them and posting your comments and corrections in "GitHub":http://github.com/schof/spree-guides/tree/master.</dd>
+    <dd class="warning">This Guide is based on Spree 0.8.x. Some of the code shown here will not work in older versions of Spree.  This guide is also incomplete in some areas and will likely not be completed.  Most of the documentation effort is now focused on the "edge" version of the code.  Please refer to the "current version":/documentation as well since it may contain updated documentation that still applies to older versions of Spree.
+    </dd>
   </dl>
 </div>
 
