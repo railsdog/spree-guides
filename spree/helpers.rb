@@ -25,5 +25,12 @@ module Spree
       c = capture(&block)
       content_tag(:code, c)
     end
+
+    def diagram(name)
+      link_to('<img src="files/diagrams/thumbnails/'+name+'.png" alt="'+name.humanize+'" />', "files/diagrams/png/#{name}.png") + 
+        '<div style="text-align: center; font-size: 0.7em;">Click diagram to enlarge.'+
+          '&nbsp;&nbsp;You can also download it as <a href="files/diagrams/dot/'+name+'.dot">.dot file</a> or'+
+          '<a href="files/diagrams/svg/'+name+'.svg">.svg file</a>.'
+    end
   end
 end

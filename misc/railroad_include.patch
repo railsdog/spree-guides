@@ -1,0 +1,73 @@
+diff -ruB railroad-0.5.0/lib/railroad/app_diagram.rb railroad-0.5.1/lib/railroad/app_diagram.rb
+--- railroad-0.5.0/lib/railroad/app_diagram.rb	2009-09-09 09:33:37.000000000 +0200
++++ railroad-0.5.1/lib/railroad/app_diagram.rb	2009-09-09 08:53:58.000000000 +0200
+@@ -81,8 +81,10 @@
+
+   # Extract class name from filename
+   def extract_class_name(filename)
+-    #filename.split('/')[2..-1].join('/').split('.').first.camelize
+-    # Fixed by patch from ticket #12742
++    filename_array = filename.split('/')
++    filename_array = filename_array[filename_array.index("app").to_i+2..-1]
++    filename_array.join("/").chomp('.rb').camelize
++  rescue Exception
+     File.basename(filename).chomp(".rb").camelize
+   end
+
+diff -ruB railroad-0.5.0/lib/railroad/controllers_diagram.rb railroad-0.5.1/lib/railroad/controllers_diagram.rb
+--- railroad-0.5.0/lib/railroad/controllers_diagram.rb	2009-09-09 09:33:37.000000000 +0200
++++ railroad-0.5.1/lib/railroad/controllers_diagram.rb	2009-09-09 08:50:30.000000000 +0200
+@@ -19,7 +19,11 @@
+   def generate
+     STDERR.print "Generating controllers diagram\n" if @options.verbose
+ 
+-    files = Dir.glob("app/controllers/**/*_controller.rb") - @options.exclude
++    if @options.only.blank?
++      files = Dir.glob("app/controllers/**/*_controller.rb") - @options.exclude
++    else
++      files = @options.only
++    end
+     files << 'app/controllers/application.rb'
+     files.each do |f|
+       class_name = extract_class_name(f)
+diff -ruB railroad-0.5.0/lib/railroad/models_diagram.rb railroad-0.5.1/lib/railroad/models_diagram.rb
+--- railroad-0.5.0/lib/railroad/models_diagram.rb	2009-09-09 09:33:37.000000000 +0200
++++ railroad-0.5.1/lib/railroad/models_diagram.rb	2009-09-09 08:50:16.000000000 +0200
+@@ -20,9 +20,13 @@
+   # Process model files
+   def generate
+     STDERR.print "Generating models diagram\n" if @options.verbose
+-    files = Dir.glob("app/models/**/*.rb")
+-    files += Dir.glob("vendor/plugins/**/app/models/*.rb") if @options.plugins_models    
+-    files -= @options.exclude
++    unless @options.only.blank?
++      files = @options.only
++    else
++      files = Dir.glob("app/models/**/*.rb")
++      files += Dir.glob("vendor/plugins/**/app/models/*.rb") if @options.plugins_models    
++      files -= @options.exclude
++    end
+     files.each do |f| 
+       process_class extract_class_name(f).constantize
+     end
+diff -ruB railroad-0.5.0/lib/railroad/options_struct.rb railroad-0.5.1/lib/railroad/options_struct.rb
+--- railroad-0.5.0/lib/railroad/options_struct.rb	2009-09-09 09:33:37.000000000 +0200
++++ railroad-0.5.1/lib/railroad/options_struct.rb	2009-09-09 08:58:24.000000000 +0200
+@@ -14,6 +14,7 @@
+   def initialize
+     init_options = { :all => false,
+                      :brief => false,
++                     :only => nil,
+                      :exclude => [],
+                      :inheritance => false,
+                      :join => false,
+@@ -45,6 +46,9 @@
+       opts.on("-e", "--exclude file1[,fileN]", Array, "Exclude given files") do |list|
+         self.exclude = list
+       end
++      opts.on("-I", "--only file1[,fileN]", Array, "Include only given files") do |list|
++        self.only = list
++      end
+       opts.on("-i", "--inheritance", "Include inheritance relations") do |i|
+         self.inheritance = i
+       end

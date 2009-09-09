@@ -1,2 +1,7 @@
 output
 .DS_Store
+files/diagrams/png
+files/diagrams/thumbnails
+files/diagrams/svg
+.idea
+core
