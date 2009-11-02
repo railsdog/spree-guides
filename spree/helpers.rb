@@ -28,9 +28,9 @@ module Spree
 
     def diagram(name)
       link_to('<img src="files/diagrams/thumbnails/'+name+'.png" alt="'+name.humanize+'" />', "files/diagrams/png/#{name}.png") + 
-        '<div style="text-align: center; font-size: 0.7em;">Click diagram to enlarge.'+
+        '<div style="text-align: center; font-size: 0.8em;">Click diagram to enlarge.'+
           '&nbsp;&nbsp;You can also download it as <a href="files/diagrams/dot/'+name+'.dot">.dot file</a> or'+
-          '<a href="files/diagrams/svg/'+name+'.svg">.svg file</a>.'
+          '<a href="files/diagrams/svg/'+name+'.svg">.svg file</a>.</div>'
     end
   end
 end

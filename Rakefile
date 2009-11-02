@@ -12,7 +12,7 @@ namespace :diagrams do
       destination = File.join(File.dirname(__FILE__), 'files', 'diagrams', 'dot')
       # Generate all models
       calculators = Dir.glob('core/app/models/calculator/*.rb').map{|c| c.gsub('core/', '')}.join(",")
-      `ruby misc/railroad -r core -M -i -l -e #{calculators}| sed 's/font-size:14.00/font-size:11.00/g' > #{destination}/models.dot`
+      `ruby misc/railroad -r core -M -i -l --hide-magic -e #{calculators}| sed 's/font-size:14.00/font-size:11.00/g' > #{destination}/models.dot`
       # adjustments and charges
       {
           'coupons' => ['coupon', 'coupon_credit', 'credit', 'calculator'],
@@ -33,7 +33,7 @@ namespace :diagrams do
       }.each_pair do |name, model_names|
         models = model_names.map{|mn| "app/models/#{mn}.rb"}.join(",")
         puts "creating .dot for #{name}"
-        `ruby misc/railroad -l -M -i  -r core -I #{models} > #{destination}/#{name}.dot`
+        `ruby misc/railroad -l -M -i --hide-magic -r core -I #{models} > #{destination}/#{name}.dot`
       end
       Rake::Task['diagrams:compile'].invoke
     else

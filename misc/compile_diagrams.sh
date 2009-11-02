@@ -11,8 +11,8 @@ do
 
   echo "generating png and svg for $filename"
 
-  cat $file | neato -Tpng > png/$filename.png
-  cat $file | neato -Tsvg > svg/$filename.svg
+  cat $file | fdp -Tpng > png/$filename.png
+  cat $file | fdp -Tsvg > svg/$filename.svg
 done
 echo "generating thumbnails"
 mogrify -format png -thumbnail 600x1000 -path thumbnails/ 'png/*.png'

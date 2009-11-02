@@ -22,3 +22,32 @@ that will get run when you load sample data with the +rake db:bootstrap+ task.
 Now you can also add sample product image files in your extensions in the 
 extensions own +lib/tasks/sample/products+ directory.  These images will be 
 copied to the +public/assets/products+ directory when the sample data is loaded.
+
+h4. Product Groups
+
+Product groups are new feature that lets you create dynamic groupings of products, based on specified criteria, like:
+* Taxonomy
+* Price
+* Name and/or description
+* Full text search (if available)
+* Product attributes (option types and properties)
+* Popularity (total number of variants ever added to cart)
+
+you can read more about them in guide: <%= guide('Product Groups', 'product_groups.html') %>
+
+h4. Ad Hoc search urls
+
+You can select products to be displayed with simply typing in an url!
+This way on your home page you can have a set of bookmarkable and SEO friendly
+urls to most important products from your store.
+
+Example:
+
+* http://demo.spreecommerce.com/s/keywords/stein,mug
+* http://demo.spreecommerce.com/s/price_between/10,20/in_name/Rails
+
+You can also use this search functionality within taxon:
+
+* http://demo.spreecommerce.com/t/shirts/clothing/categories/t-shirts/s/in_name/Baseball
+
+allowed options and full documentation can be found in <%= guide('Product Scopes', 'product_scopes.html') %>

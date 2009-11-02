@@ -1,0 +1,91 @@
+h2. Products groups
+
+This guide covers product groups functionality from the user point of view, as well as introduction for
+programmer that wants to use or extend functionality in site extension.
+Extensive low level documentation for this module can be found in source code of ProductGroup and ProductScope models.
+
+endprologue.
+
+h2. End user guide
+
+h3. Introduction
+
+Product groups are constructed from the set of conditions called _scopes_.
+Each scope can represent simple or complex conditions, from simple ones like "master price have to be bigger then x"
+to more complex ones like "order by popularity".
+All selected scopes always narrow down the search, unless explicitly stated otherwise.
+That means that usually adding each new scope will reduce number of items shown.
+So called "order scopes" should not change number of items displayed, only order in which items are displayed.
+All scopes should be combinable, but some combinations might result in empty set of products
+(most obvious example would be selecting scope price lesser then $10 and price greater then $15).
+
+h3. Creating new scope
+
+!images/product_groups/new_product_group.jpg(Creating new product group)!
+
+When creating new product group you'll have to do choose following things:
+
+* name of the group - it should be descriptive, as it'll be reflected in both admin UI and product group url.
+* order by which results will be displayed
+* conditions by which products for group will be selected, each condition have to be checked to be activated.
+
+After you select conditions, you can preview products that will be selected by your conditions and inspect
+if the result is what you would expect.
+
+After you create product group, you'll be presented with informations about Product roup, including bookmarkable URL,
+product count, and other usefull information.
+
+h3. Listing product groups
+
+!images/product_groups/product_groups.jpg(Product group listing)!
+
+Index page of product groups allow you to quickly inspect validity of the Product Groups(check number of selected products).
+See the preview of the product group, and it's permalink.
+
+h2. Customization guide
+
+h3. Translating Product Groups and scopes
+
+Product Group functionality relies heavily on rails I18n capabilities, it's used to define name,
+description, and format string for product scopes and groups.
+The goal is to provide usable descriptions of product scopes for end users.
+So for example for _price_between_ scope that takes two arguments the definition looks like this:
+<pre>
+  price_between:
+    args:
+      high: High
+      low: Low
+    description: ""
+    name: "Price between"
+    sentence: price between <em>%.2f</em> and <em>%.2f</em>
+</pre>
+* _Name_ if the name of the scope displayed in admin interface.
+* _Description_ is used only in admin interface UI to provide additional information about usage of the scope.
+* _Sentence_ is used for describing the scope for end user, and as name suggests should be formed as a sentence
+  that can be connected using "and", sentence is evaluated using _String#%_ method and can be formatted using
+  printf escape sequences. *WARNING* It's very important to use correct number of arguments in sentence, as
+  asking for larger number of arguments in sentence then is provided will break the application.
+
+Same rules apply for ordering scopes, except that they don't take any arguments so that part can be of course skipped.
+
+Documentation of Scopes module provides some additional information on translating customized scopes.
+
+h3. Modifying available scopes
+
+All scopes available in the admin UI are defined in _lib/scopes/product.rb_ file in SCOPES constant.
+Format of the constant should be self explenatory, but it's recomended to read _Scopes_ module documentation.
+When using Ruby 1.8 order of scopes within groups, and order of groups themselves is arbitrary,
+Ruby 1.9 preserves order of hash, and in effect reflects order of declarated scopes in UI.
+
+You can provide any valid Product scope (including dynamically created SearchLogic scopes) by declaring it in
+_SCOPES_ constant. If you plan to provide your own custom scope make sure to:
+
+* Check if new scope doesn't clash with any of the existing scopes(especially when you're using joins)
+* It doesn't change order of the result(unless it's order scope)
+* It does create neccessery joins and includes, you can't rely on joins or includes from other scopes
+* It doesn't do unnecessery joins or includes - each unnecessery one can be performance bottleneck
+* be very careful especially when you're joining variants and master,
+  make sure to use "AS" sql statement on joins and in conditions,
+  to ensure conditions from different scopes don't clash with each other
+
+Remember to provide translations for your new scopes, there's a _Scopes.generate_translation_ method that can be helpful.

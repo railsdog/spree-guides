@@ -1,0 +1,42 @@
+
+h2. Calculators and Adjustments
+
+<%= diagram('adjustments') %>
+
+h3. Adjustments
+
+_Adjustments_ are new addition in 0.9 release, they were introduced so all adjustments to order 
+total can share common behaviour and methods. Adjustments are divided into _Charges_ and _Credits_ 
+by single table inheritance, main difference is that Credits always have negative amount, 
+and Charges always have positive amount.
+
+As you can see on the diagram the central points of the system are Adjustment model from which all 
+types of charges and credits are inherited, and Calculator model, that almost all charges are 
+explicitly connected to in relational model(sometimes via other relationships).
+
+Every Adjustment have adjustment source (on the diagram these are Shipment and Coupon models), 
+that is used to recalculate charge, and it should provide all information needed to do that
+(including providing calculator).
+
+Before checkout is completed, adjustments are recalculated every time order changes, after checkout
+all adjustments are frozen, and can be later modified, but will not be automatically recalculated.
+
+In core following models are used as adjustment sources:
+
+ * **Shipment** - is a source of shipping charge, each shipment generates shipping charge.
+ * **Coupon** - is source of CouponCredit - which inherits from Credit.
+ * **Order** - is a source of tax charge, taxation is calculated upon zones and item_total. 
+   *WARNING* Calculation of tax charge is currently an exception, and will probably be changed before 1.0.
+
+h3. Credits and coupons
+
+<%= diagram('coupons') %>
+
+Credits in contrast to shipping and tax charges are not associated to order automatically, they are attached
+when user provides valid coupon code, depending on Coupon that generated them and Order they are associated with.
+You can learn how it works by inspecting CouponCredit and Coupon models.
+Credit total can never exceed Item total, that means that order total should never drop below 0.
+
+h3. Creating custom adjustments 
+
+
