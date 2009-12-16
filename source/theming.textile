@@ -1,0 +1,209 @@
+h2. Theming
+
+This guide covers the use of extensions to customize the appearance of your Spree store. In this guide you will learn:
+
+* How to use an extension to customize the look of your store
+* How to to override Spree's stylesheets and add your own
+* How to override Spree's templates
+* How to insert content into Spree's templates using hooks
+
+endprologue.
+
+h3. Theme extensions
+
+Themes in Spree are implemented as extensions. Please refer to the "extensions guide":extensions.html for full details on using Spree extensions. This guide is concerned with features of extensions specific to altering the appearance of your store.
+
+h4. Creating a theme extension
+
+First, to generate the extension, run the following command:
+
+<shell>
+script/generate extension my_theme
+</shell>
+
+h4. Installing an existing extension
+
+If the extension you want to install is available in a Git repository you can install it easily as follows:
+
+<shell>
+script/extension install git://github.com/username/your-theme.git
+</shell>
+
+
+h4. Load order
+
+Each extension loaded by Spree will override the views and styleshets of those that preceed so you will need to configure their load order. Put something like the following inside the initializer block in the file +config/environment.rb+:
+
+<shell>
+config.extensions = [:all, :my_theme, :site]
+</shell>
+
+
+
+
+h3. Stylesheets
+
+This part of the guide explains how override Spree's default stylesheets or add your own.
+
+h4. Overriding Spree's stylesheets
+
+h5. Less CSS
+
+Spree uses "Less CSS":http://lesscss.org/ for its CSS. Less makes your CSS more maintainable with features such as variables and mixins while still supporting standard CSS syntax. 
+
+Stylesheets are created in +app/stylesheets+ with the extension ".less" and are then compiled into ".css" files automatically.
+
+Spree has a number of stylesheets for the front end of the site which are all compiled to the single file "screen.css" to improve site performance. These files are as follows:
+
+<shell>
+  _buttons.less
+  _cart.less
+  _checkout_progress.less
+  _checkout.less
+  _colors.less
+  _forms.less
+  _layout.less
+  _messages.less
+  _mixins.less
+  _navigation.less
+  _prices.less
+  _product_details.less
+  _product_lists.less
+  _registration.less
+  _reset.less
+  _typography.less
+  screen.less
+</shell>
+
+The "_" file prefix denotes a partial stylesheet. These are all included into the main stylesheet "screen.less" on compilation using the +@import+ directive:
+
+<shell>
+  @import "_reset";
+</shell>
+
+To override any of these stylesheets, create a file of the same name within your extensions +app/stylesheets+ directory. For example, if you just wanted to change some of the colours used in the default theme you would just create a copy of +_colors.less+ in your +app/stylesheets+ directory.
+
+
+
+h4. Custom stylesheets
+
+h5. Using preferences to specify stylesheets to load
+
+By default Spree will only load +/stylesheets/screen.css+ into the main layout. Rather than override the layout template you can load your custom stylesheet by editing +SITE_EXTENSION_DIR/my_theme_extension.rb+ and changing  the existing +activate+ method to the following:
+
+<shell>
+def activate
+  AppConfiguration.class_eval do
+    preference :stylesheets, :string, :default => 'screen,my_theme'
+  end
+end
+</shell>
+
+This would load screen.css first followed by my_theme.css.
+
+
+h5. Customizing the contents of the head tag
+
+To have full control over the stylesheets used in your theme, as well as JavaScripts, you can override the template +app/views/shared/_head.html.erb+ which includes all the contents of the head tag. See "Customizing Templates":#customizingtemplates
+
+If you just need to add your own content to what the head already contains, you can use the theme hook "head". See "Hooks":#hooks for details.
+
+
+h3. Images and other assets
+
+h4. Adding your own images, JavaScripts and other assets
+
+Any static asset your theme requires should be placed in +SITE_EXTENSION_DIR/public+. These will be copied into +RAILS_ROOT/public+ when you start the application.
+
+h4. Using a Custom Logo
+
+If you're overriding the main application layout (+spree_application.html.erb+) you can place your logo image in there. However it is possible  to change the logo without overriding this template using preferences as follows:
+
+<code>
+  AppConfiguration.class_eval do
+    preference :logo, :string, :default => '/images/my_logo_.png'
+  end
+</code>
+
+
+
+h3. Hooks
+
+Hooks are a way of inserting your own content into pre-defined parts of Spree's default templates without having to make your own copy of those templates in your extension. 
+
+Multiple extensions can modify the same hook, the changes are applied cumulatively based on extension load order.
+
+h4. Available hooks
+
+Hooks are available to let you add content after product lists, within sidebars and other useful places. A full list of available hooks is available "here":hooks.html
+
+h4. Using hooks
+
+Most hooks are defined with blocks so they span a region of the template, allowing content
+to be replaced or removed as well as added to.
+
+In your extension directory you should find the file +my_theme_hooks.rb+.  Within this file you can specify which content should be inserted into which hooks using the following 4 methods:
+
+* insert_before
+* insert_after
+* replace
+* remove
+
+h5. Inserting and replacing content
+
+Supply a block name followed by any arguments you'd use with +render+
+
+<shell>
+  insert_before :homepage_products, :text => "<h1>Welcome!</h1>"
+
+  insert_after :homepage_products, 'shared/offers' # renders a partial
+
+  replace :taxon_sidebar_navigation, 'shared/my_sidebar
+</shell>
+
+h5. Using a block
+
+The block should return the string to be inserted. It has access to any methods or instance variables available in the view.
+
+<shell>
+  # adding a link below product details:
+  insert_after :product_description do
+    '<p>' + link_to('Back to products', products_path) + '</p>'
+  end
+
+  # adding a new tab to the admin navigation
+  insert_after :admin_tabs do
+    tab(:taxonomies)
+  end
+</shell>
+
+h5. Removing a hook's content
+
+<shell>
+  remove :homepage_products
+</shell>
+
+
+
+h3. Customizing templates
+
+h4. Overriding Spree default views
+
+To override any of of Spree's default views, including those for the admin interface, simply create a file with the same filename in your extensions +views+ directory.
+
+For example, to override the main layout, create the file +SITE_EXTENSION_DIR/app/views/layouts/spree_application.html.erb+
+
+h4. Using hooks in your templates
+
+Since themes are just Spree extensions, one may be loaded after another, the modifications they make to the site's appearance being combined based on their load order.  If you anticipate your theme being extended by other themes you should make sure your templates maintain the standard hooks where possible so subsequently loaded extensions can make use of them. You may also define new hooks using the +hook+ helper like so:
+
+<shell>
+  <%= hook :my_hook_name %>
+
+  # or with block
+  <% hook :my_hook_name do %>
+    <p>Default content</p>
+  <% end %>
+</shell>
+
+If your theme adds new hooks these should be documented in your theme's README.
