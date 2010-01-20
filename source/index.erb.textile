@@ -3,13 +3,15 @@ h2. Spree guides
 
 These guides are designed to make you immediately productive with Spree, and to help you understand how all of the pieces fit together. They are written by the authors of Spree as well as members of the Spree community.
 
+* "Edge version":http://spreecommerce.com/documentation - based on the current Spree "master branch":http://github.com/railsdog/spree/tree/master
+* "Current Release version":http://spreecommerce.com/documentation/legacy/0_9_x - based on Spree 0.9.x
+
 <% end %>
 
 <% content_for :index_section do %>
 <div id="subCol">
   <dl>
-    <dd class="warning">Spree Guides are part of an ongoing documentation effort and are a work in progress.</dd>
-    <dd class="ticket">Guides marked with this icon are currently being worked on. While they might still be useful to you, they may contain incomplete information and even errors. You can help by reviewing them and posting your comments and corrections in "GitHub":http://github.com/schof/spree-guides/tree/master.</dd>
+    <dd class="warning">This documentation is for the "edge" version of Spree and may refer to features that are not currently available in an officially released version.  Please see the "legacy":http://spreecommerce.com/documentation/legacy/ documentation for officially released versions.</dd>
   </dl>
 </div>
 
@@ -39,8 +41,29 @@ h3. Basic Configuration
   <% end %>
 </dl>
 <dl>
+  <% guide('Inventory', 'inventory.html') do %>
+    Information on the powerful inventory management system used by Spree.
+  <% end %>
+</dl>
+<dl>
+  <% guide('Taxonomy/Categories', 'taxonomy.html') do %>
+    This guide covers various methods for categorizing your products.
+  <% end %>
+</dl>
+
+<dl>
+  <% guide('Payment Gateways', 'payment_gateways.html') do %>
+    This guide covers how to setup a payment gateway using ActiveMerchant or another gateway solution of your choice.
+  <% end %>
+</dl>
+<dl>
   <% guide('Zones', 'zones.html') do %>
     This guide covers how to configure a zone for shipping, taxation or other custom purposes.
+  <% end %>
+</dl>
+<dl>
+  <% guide('Calculators', 'calculators.html') do %>
+    This guide covers the role that calculators play in various Spree operations.
   <% end %>
 </dl>
 <dl>
@@ -49,23 +72,13 @@ h3. Basic Configuration
   <% end %>
 </dl>
 <dl>
-  <% guide('Inventory', 'inventory.html') do %>
-    Information on the powerful inventory management system used by Spree.
-  <% end %>
-</dl>
-<dl>
-  <% guide('Payment Gateways', 'payment_gateways.html') do %>
-    This guide covers how to setup a payment gateway using ActiveMerchant or another gateway solution of your choice.
-  <% end %>
-</dl>
-<dl>
   <% guide('Shipping', 'shipping.html') do %>
     Information on how to configure shiping options as well as building your own shipping calculator.
   <% end %>
 </dl>
 <dl>
-  <% guide('Taxonomy/Categories', 'taxonomy.html') do %>
-    This guide covers various methods for categorizing your products.
+  <% guide('Coupons and Discounts', 'coupons_and_discounts.html') do %>
+    Information on how to configure your own coupons/discounts/gift certificates.
   <% end %>
 </dl>
           
@@ -84,6 +97,11 @@ h3. Customization
 <dl>
   <% guide('Extension Tutorial', 'extension_tutorial.html') do %>
     This tutorial covers the basic steps of creating your own custom extensions.
+  <% end %>
+</dl>
+<dl>
+  <% guide('Theming', 'theming.html') do %>
+    Learn how to change the appearance of your store using a theme extension.
   <% end %>
 </dl>
 <dl>
@@ -120,6 +138,11 @@ h3. Digging Deeper
   <% end %>
 </dl>
 <dl>
+  <% guide('REST API', 'rest.html') do %>
+    Details on interacting with Spree using the RESTful API.
+  <% end %>
+</dl>
+<dl>
   <% guide('Contributing to Spree', 'contributing_to_spree.html') do %>
     Do you enjoy Spree and want to "give something back?"  This guide contains information on how to contribute to the Spree project.  
   <% end %>
@@ -133,7 +156,7 @@ h3. Best Practices
 </dl>
 <dl>
   <% guide('SEO Considerations', 'seo_considerations.html') do %>
-    Information on how to leverage the exisitng SEO features of Spree as well as on general SEO best practices.
+    Information on how to leverage the existing SEO features of Spree as well as on general SEO best practices.
   <% end %>
 </dl>
 

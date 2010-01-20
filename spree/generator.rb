@@ -8,8 +8,11 @@ module Spree
       @guides_dir = File.join(File.dirname(__FILE__), '..')
 
       @output = output || File.join(@guides_dir, "output")
+      
+      @only = ENV["ONLY"]
+      @only = ARGV.join(",")if ARGV.length > 0
 
-      unless ENV["ONLY"]
+      unless @only
         FileUtils.rm_r(@output) if File.directory?(@output)
         FileUtils.mkdir(@output)
       end
@@ -20,8 +23,8 @@ module Spree
     def generate
       guides = Dir.entries(view_path).find_all {|g| g =~ /textile$/ }
 
-      if ENV["ONLY"]
-        only = ENV["ONLY"].split(",").map{|x| x.strip }.map {|o| "#{o}.textile" }
+      if @only
+        only = @only.split(",").map{|x| x.strip }.map {|o| "#{o}.textile" }
         guides = guides.find_all {|g| only.include?(g) }
         puts "GENERATING ONLY #{guides.inspect}"
       end
@@ -49,14 +52,14 @@ module Spree
         if guide =~ /\.erb\.textile/
           # Generate the erb pages with textile formatting - e.g. index/authors
           result = view.render(:layout => 'layout', :file => name)
-          f.write textile(result)
+          f.write(textile(result) + analytics)
         else
           body = File.read(File.join(view_path, guide))
           body = set_header_section(body, @view)
-          body = set_index(body, @view)
+          body = set_index(body, @view)  
 
-          result = view.render(:layout => 'layout', :text => textile(body))
-          f.write result
+          result = view.render(:layout => 'layout', :text => textile(body))    
+          f.write(result + analytics)
           warn_about_broken_links(result)
         end
       end
@@ -72,7 +75,22 @@ module Spree
 
       view.content_for(:page_title) { page_title }
       view.content_for(:header_section) { header }
+                     
       new_body
+    end  
+    
+    def analytics 
+      <<-GOOGLE
+      <script type="text/javascript">
+      	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+      	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+      </script>
+      <script type="text/javascript">
+      	var pageTracker = _gat._getTracker("#{ENV['ANALYTICS_ID']}");
+      	pageTracker._initData();
+      	pageTracker._trackPageview();
+      </script>      
+      GOOGLE
     end
 
     def set_index(body, view)

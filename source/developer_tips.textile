@@ -9,12 +9,28 @@ h3. Upgrade Considerations
 
 h4. The important commands
 
-+rake spree:upgrade+ 
++spree --update+ 
 will copy in any new "infrastructure" files, e.g. new configuration or javascript or 
-style files. It saves you from needing to run the +spree+ command to get an empty project and then copying
-changes across.
+style files.
 
-NOTE. currently this over-writes existing files, so be careful if you have experimental changes. (IDEA: use +-b+ flag on the copies? it does help)
+Before updating, you will want to ensure the installed spree
+gem is up-to-date.  For example, if you are using Spree edge, then get the 
+latest edge source, and run +rake spree:gem:install+.
+
+Once you have the latest spree gem installed, run +spree --update+ from 
+inside RAILS_ROOT (your application directory) and your application will be
+upgraded.
+
+The update process is less “destructive” than in previous versions of Spree.
+Instead of silently replacing crucial files in your application, Spree now checks
+the content of files it needs to replace, and if the old version differs, it
+will be saved with a ~ suffix.
+
+This makes it easier to see when and how some file has changed – which is often
+useful if you need to update a customized version. The update command will also
+no longer copy the routes.rb file – the original version just loads the core
+Spree routes file, so has no need to change. (Recall that you can define new
+routes in your extensions.)
 
 
 h4. Dos and Don'ts
@@ -34,21 +50,18 @@ welcome.
 INFO. The "Spree Wiki":/wiki/scripts contains a few scripts to automate some of the checking.
 
 
-h3. Initializers
+h4. Initializers
 
-Initializers are run during startup, and are the recommended way to execute certain settings.
+Initializers are run during startup, and are the recommended way to execute certain settings. You can 
+put initializers in extensions, thus have a way to execute extension-specific configurations.
 
-NOTE. Initializers are run in alphabetical order. Most of the time this won't matter, but you probably want your site initializer to run last. I call mine +zzzzzzz.rb+. 
-
-NOTE. At the moment, initializers in extensions are ignored (but we are looking at this). For now, still put initializers in their extensions but use symbolic links in +config/initializers+ to point to them. 
-
-
+See the "extensions guide":extensions.html#extension-initializers for more information. 
 
 h3. Debugging techniques
 
 h4. Use tests!
 
-Use +rake spec+ to test basic functioning after you've made changes.
+Use +rake spec+ and +rake test+ to test basic functioning after you've made changes.
 
 
 h4. Analysing crashes on a non-local machine
@@ -66,7 +79,48 @@ Spree::BaseController.class_eval do
 end
 </shell>
 
+h4. Editing stylesheets - Compass and SASS
+
+To avoid having to restart the web server to see changes to SASS stylesheets, use
+a compass watcher:
+
+<shell>
+compass --watch --sass-dir path/to/sass --css-dir ./path/to/compiled
+</shell>
+
+The compass watcher will compile any changed files and write them to the css-dir.
+
+When editing my site extension's sass, I use these paths, if you use the gem spree boot mode
+it may be different for you:
+
+<shell>
+compass --watch --sass-dir vendor/extensions/site/public/stylesheets/sass --css-dir ./public/stylesheets/compiled
+</shell>
+
 h3. Managing large projects
+
+h4. To fork or not to fork...
+
+Suppose there's a few details of Spree that you want to over-ride due to personal or client preference, 
+but which aren't the usual things that you'd over-ride (like views) - so something like tweaks to the
+models or controllers. 
+
+You could hide these away in your site extension, but they could get mixed up with your real site
+customizations. Your could also fork Spree and run your site on this forked version, but this can
+also be a headache to get right. There's also the hassle of tracking changes to +railsdog/master+ and 
+pulling them into your project at the right time. 
+
+So here's a compromise: have an extra extension, say +spree-tweaks+, to contain your small collection
+of modified files, which is loaded first in the extension order. The benefits are: it's clear what you
+are over-riding, and easier to check against core changes; you can base your project on an official
+gem release or a +railsdog/master+ commit stage; such tweaks can become part of your client site project 
+and be managed with SCM etc. 
+
+If you find yourself wanting extensive changes to core, this technique probably won't work so well. 
+But then again, if this is the case, then you probably want to look seriously at splitting some 
+code off into stand-alone extensions and then see whether any of the other code should be contributed 
+to the core. 
+
 
 h4. Setting up submodules
 

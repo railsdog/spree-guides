@@ -5,6 +5,7 @@ This guide covers the use of extensions and their role in customizing and enhanc
 * The role extensions play in a Spree deployment
 * How to build a "site" extension to customize the look and feel of your store
 * How to write a custom extension
+* How to initialize an extension
 * Where to find existing extensions
 
 endprologue.
@@ -40,6 +41,7 @@ app
 config
 db
   migrate
+  seeds.rb
 lib
 spec
   controllers
@@ -87,7 +89,7 @@ INFO. If there is a translation error or missing translation information in one 
 
 h3. Tutorial
 
-There is a very detailed "extensions tutorial":extensions_tutorial.html that will go through a detailed example of how to create your own extension.
+There is a very detailed "extensions tutorial":extension_tutorial.html that will go through a detailed example of how to create your own extension.
 
 h3. Extensions Directory
 
@@ -120,13 +122,19 @@ The standard rake command for running Rails migrations will run all of the Spree
   rake db:migrate
 </shell>
 
-INFO. There are currently some known issues with migrating +DOWN+ using extension migrations.  Since down migrations are rarely useful in the real world, this problem is likely to remain unresolved for a while.        
+INFO. There are currently some known issues with migrating +DOWN+ using extension migrations.  Since down migrations are rarely useful in the real world, this problem is likely to remain unresolved for a while.  
+
+Extensions can also populate seed data in a way similar to how a standard rails app.  Seed data is data that is needed by the application in order for it to work properly.  This is a fairly specialized case and it is not the same as sample data (which is optional.)
+
+<shell>
+  rake db:seed
+</shell>
 
 NOTE. For more information on Rails migrations in general, please see the excellent "rails guide":http://guides.rubyonrails.org/migrations.html on this subject.
 
-h3. Extension Load Order
+h3. Extension Load Order and Initializers
 
-In the +environment.rb+ inside the initializer block put something like this:
+Put something like the following inside the initializer block in the file +config/environment.rb+:
 
 <shell>
 config.extensions = [:all, :site]
@@ -139,6 +147,19 @@ You can even make something be loaded first too:
 <shell>
 config.extensions = [:first_extension, :all, :site]
 </shell>
+
+h4. Extension Initializers
+
+You can put initializers in extensions, and these are the recommended way to configure certain settings.
+
+Initializers go in the +config/initializers+ directory in an extension, and should be +.rb+ files.
+Such extensions are loaded in extension order (as above) then by alphabetical order within an extension - 
+and they will all be loaded after the main project initialization is done. 
+
+So, if the +site+ extension is loaded last, then +site/config/initializers/beta.rb" is run before 
++site/config/initializers/gamma.rb+, and +other_ext/config/initializers/alpha.rb+ will be loaded 
+before both of these (because it is from an earier extension). 
+
 
 h3. Creating Your Own Extension
 
@@ -281,6 +302,7 @@ The array that is appended to the extension_tabs attribute is passed in the call
 
 Any option supported by the tabs helper can be passed in the hash argument.
 
+INFO. By default, the route is created by concatenating "admin_" with the first element of the array. However, if you override the route (as above) and are making use of the 'admin' namespace, you will need to include "admin_" as a part of your route argument.
 
 h4. Make your extension helper avaliable to all views (helpful if you're using it in a layout override)
 
