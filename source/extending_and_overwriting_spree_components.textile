@@ -1,0 +1,42 @@
+h2. Extending and Overwriting Spree Extensions
+
+This guide will show you how to extend spree models and controllers, without impairing ability to add vendor extension or upgrade to new version of spree.
+
+h3. Background
+
+Spree uses custom loader that by default loads only one file with the same relative path, based on order defined in environment.rb 
+(see guide:'extensions.html' @ Extension Load Order). Also site_extension.rb is loaded every request so we can use it to inject our own code.
+
+h3. Creating namespaced helpers
+
+Since helpers are modules, and are kinda special I'll cover them first. 
+Best option right now to ensure that your extension will not overwrite anything unneceserilly is to namespace it. 
+This solution ensures that noone will accidentally overwrite your code, and helpers should be loaded (and overwritten) in extension loading order.
+So we create _site_helper.rb_ and put following inside
+
+<code lang="ruby">
+module SiteHelper
+  def self.included(receiver)
+    [:product, :order].each do |helper|
+      helper = Site.const_get("#{helper.to_s.camelize}Helper")
+      receiver.send :include, helper
+    end
+  end
+end
+</code>
+
+and each coresponding helper we put in _site_ directory and Site namespace.
+Now we make sure to load everything on each request by adding:
+
+<code lang="ruby">
+Dir.glob(File.join(base, "app/helpers/**/*_helper.rb")) do |helper|
+  load(helper)
+end
+
+Spree::BaseController.send(:helper, SiteHelper)
+</code>
+
+Warning!: Somtimes this technique doesn't work first time - so you might need to reload page twice to see changes, 
+also sometimes you might need to include namespaced module into specific controller explicitly.
+
+
