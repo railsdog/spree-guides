@@ -1,0 +1,131 @@
+
+h2. Database documentation
+
+This guide covers database structure of spree. Documentation is split into sections surrounding key spree models. This is primarily for developers who are interested in contributing code to the Spree project or fixing the source code themselves. It is not necessary to have a copy of the source code to run Spree.
+
+h3. Order
+
+<%= diagram('order') %>
+
+Main purpose of orders table and it's associations is to keep all data that might be needed to fulfill the order.
+Contrary to most of other ecommerce solutions, spree doesn't have 'cart' model, instead ordered variants are directly linked to future order via line_items table.
+This approach have several advantages:
+
+* Calculation of order adjustments (charges and credits).
+* Easier reporting.
+* It allows for concrete shipping cost quoting.
+* Reduced problems with database integrity.
+
+Main disadvantage of this solution is that we have to store all information that might be unnecessary when user just adds items to cart and leaves.
+
+Order table have several fields that hold precalculated totals of different kinds of adjustments. This is mostly for performance reasons to allow fast reporting, but also for legacy extensions that might still use this fields in database. In current version of application, this values are always recalculated.
+
+The most important field of the orders table is _state_ column that holds the order state.
+Most important states are:
+
+* "in_progress" - initial state of unfinished order.
+* "new" - new order that was _completed_ by user and should be processed.
+
+h5. Table fields
+
+| Name | Sql type | Default value | Comments |
+| <u>id</u> | INTEGER | | - |
+| number | VARCHAR(15) | | Order number used to identify it for the user |
+| item_total | DECIMAL(8,2) | 0.0 | Cached total cost of all items |
+| total | DECIMAL(8,2) | 0.0 | Cached total of all items and adjustments |
+| state | VARCHAR(255) | | Current state of the order (used in state machine) |
+| token | VARCHAR(255) | | Safety token for access to orders made by anonymous users |
+| adjustment_total | DECIMAL(8,2) | 0.0 | Cached total of order adjustments |
+| credit_total | DECIMAL(8,2) | 0.0 | Cached total of order credits (obsolete) |
+| completed_at | DATETIME | | Time when user completed order, basic indicator if order was placed|
+| user_id | INTEGER | | - |
+
+h5. Direct relationships
+
+|Name | Type | Comments|
+| adjustments | has many | Adjustments associated with the order are divided into charges and credits |
+| charges | has many | Charges associated with order (all charges have non-positive amount value) |
+| credits | has many | Credits associated with order (all credits have positive amount value) |
+| inventory_units | has many | |
+| checkout | has one | |
+| user | belongs to | User that made an order, can be NULL is user choose not to register in shop |
+| creditcards | has many | |
+| payments | has many | |
+| state_events | has many | All state changes are logged here, and might be used to roll back previous state when order is resumed after accidental cancellation |
+| shipments | has many | |
+| line_items | has many | |
+
+h5. Checkout
+
+| Name | Type | Comments|
+| <u>id</u> | INTEGER | - |
+| order_id | integer | Foreign key for orders table |
+| email | varchar(255) | Email user had provided during checkout(mandatory) |
+| ip_address | varchar(255) | IP Address, from which checkout was made |
+| special_instructions | text | Special instructions for delivery(optional) |
+| bill_address_id | integer | Foreign key to addresses table |
+| state | varchar(255) | State of checkout |
+| ship_address_id | integer | Foreign key to addresses table |
+| shipping_method_id | integer | Shipping method chosen during checkout, it's not used for cost registration! It's copied into shipment model, and that one can be changed later. |
+
+h5. Line items
+
+| Name | Sql type | Comments |
+| <u> id </u> | INTEGER | - |
+| order_id | integer | - |
+| variant_id | integer | - |
+| quantity | integer | Quantity of products sold. |
+| price | decimal(8,2) | Price at which product was sold. |
+
+h5. Inventory Unit
+
+| Name | Sql type | Comments |
+| <u>id</u> | INTEGER | - |
+| variant_id | integer | - |
+| order_id | integer | - |
+| state | varchar(255) | State of inventory unit |
+| lock_version | integer | - |
+| shipment_id | integer | - |
+
+h5. Adjustment
+
+<%= diagram('adjustments') %>
+
+*Adjustment* model is a super class of all models that change order total.
+
+All adjustments associated with order are added to _item_total_.
+charges always have positive amount (they increase total),
+credits always have negative totals as they decrease the order total.
+
+Very important is also combination of two columns adjustment_source_id and adjustment_source_type. 
+Second one is holding name of the model that was source of the adjustment (currently this can be Coupon, Shipment and Order), table name can be infered from these models. adjustment_source_id is holding id of the record in one of these columns.
+
+Adjustment source is used as source of data when recalculating the adjustment (algorithm that uses the data is provided by Calculator model).
+
+| Name | Type | Comments |
+| <u> id </u> | INTEGER | - |
+| type | VARCHAR(255) | Type of the adjustment, used by rails for single table inheritance |
+| amount | DECIMAL | Amount is saved ONLY when associated order is saved, before that adjustment is each time recalculated inside application and DB value is NULL. When adjustment_source_type is Charge or it's descendant amount should be non-negative. When adjustment_source_type is Credit or it's descendant amount should be positive |
+| description | VARCHAR(255) | Description of charge to be show to user |
+| position | INTEGER | Position of adjustment in order adjustments list (legacy) |
+|adjustment_source_id | INTEGER | This column holds key to column specified by adjustment_source_type |
+|adjustment_source_type| VARCHAR(255) | This column holds name of class of adjustment source, table name can be derived from it in application |
+| order_id | INTEGER | |
+
+h4. Shipment
+
+<%= diagram('shipping') %>
+
+h3. Product and Variant
+
+<%= diagram('product_options') %>
+
+h3. Taxonomies, Taxons and Product Groups
+
+<%= diagram('product_grouping') %>
+
+h3. Taxation and Zone
+
+<%= diagram('taxation') %>
+
+h3. User

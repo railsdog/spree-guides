@@ -67,6 +67,7 @@ module Spree
 
     def set_header_section(body, view)
       new_body = body.gsub(/(.*?)endprologue\./m, '').strip
+      return("") unless $1
       header = $1
       header =~ /h2\.(.*)/
       page_title = $1.strip

@@ -146,6 +146,14 @@ h3. Digging Deeper
   <% guide('Contributing to Spree', 'contributing_to_spree.html') do %>
     Do you enjoy Spree and want to "give something back?"  This guide contains information on how to contribute to the Spree project.  
   <% end %>
+</dl>
+<dl>
+  <% guide('Database documentation', 'database.html') do %>
+    This guide covers databse structure of spree. Documentation is split into sections sorounding key spree models. This is primarily for developers who are interested in contributing code to the Spree project or fixing the source code themselves.  It is not necessary to have a copy of the source code to run Spree.  
+  <% end %>
+</dl>
+
+
 
 h3. Best Practices   
 

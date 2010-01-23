@@ -29,7 +29,11 @@ namespace :diagrams do
           'adjustments' => [
               'adjustment', 'charge', 'credit', 'coupon_credit', 'tax_charge',
               'shipping_charge', 'coupon', 'shipment', 'calculator', 'shipping_method'
-          ]
+          ],
+          'order' => [
+              'order', 'adjustment', 'charge', 'credit', 'line_item', 'variant', 'state_event', 'payment', 'inventory_unit', 'checkout', 
+              'shipment', 'shipping_method', 'address', 'creditcard'
+          ],
       }.each_pair do |name, model_names|
         models = model_names.map{|mn| "app/models/#{mn}.rb"}.join(",")
         puts "creating .dot for #{name}"
