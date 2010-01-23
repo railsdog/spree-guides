@@ -1,4 +1,0 @@
-default=
-diagrams\:compile=Compile diagrams
-diagrams\:generate=Generate diagrams
-guides=Generate guides (for authors), use ONLY=foo to process just "foo.textile"
