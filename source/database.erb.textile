@@ -57,6 +57,8 @@ h5. Direct relationships
 
 h5. Checkout
 
+Checkout model holds information about user that completes order, currently empty checkout is created for each order, but that's going to change, and code _should not_ assume that checkout is present, untill user places order. 
+
 | Name | Type | Comments|
 | <u>id</u> | INTEGER | - |
 | order_id | integer | Foreign key for orders table |
@@ -65,10 +67,11 @@ h5. Checkout
 | special_instructions | text | Special instructions for delivery(optional) |
 | bill_address_id | integer | Foreign key to addresses table |
 | state | varchar(255) | State of checkout |
-| ship_address_id | integer | Foreign key to addresses table |
 | shipping_method_id | integer | Shipping method chosen during checkout, it's not used for cost registration! It's copied into shipment model, and that one can be changed later. |
 
 h5. Line items
+
+Purpose of line_items table is to store quantity and variant that was added to order by user. Price is copied from variant when order is completed, so the reporting code can access price at which product was purchased, even after price of variant changes.
 
 | Name | Sql type | Comments |
 | <u> id </u> | INTEGER | - |
@@ -79,17 +82,31 @@ h5. Line items
 
 h5. Inventory Unit
 
+InventoryUnit model is used to track inventory of items sold. It's used for returns and warehouse management.
+Records are not created for not-sold "on hand" items. This behaviour has intoduced between 0.9 and 1.0 versions, previously when product/variant "on_hand" property was set, InventoryUnit records were created/destroyed to match the value. This proved to be resource consuming, and rarelly needed.
+Right now number of on hand items is stored in variant model, if that number if negative, it means that this variant was backordered.
+
+InventoryUnit can have following states:
+
+* Sold
+* Shiped
+* Returned 
+
+Returned status means inventory item is beeing currently returned, if it gets back to warehouse, it should be removed, and number of on_hand items in variant should be increased if item is fit to be sold again).
+
 | Name | Sql type | Comments |
 | <u>id</u> | INTEGER | - |
 | variant_id | integer | - |
 | order_id | integer | - |
 | state | varchar(255) | State of inventory unit |
-| lock_version | integer | - |
-| shipment_id | integer | - |
+| lock_version | integer | obsolete, will be removed with v1.0 |
+| shipment_id | integer | Shipment in which item waas sent |
 
-h5. Adjustment
+h4. Adjustment
 
 <%= diagram('adjustments') %>
+
+h5. Adjustment
 
 *Adjustment* model is a super class of all models that change order total.
 
@@ -100,7 +117,12 @@ credits always have negative totals as they decrease the order total.
 Very important is also combination of two columns adjustment_source_id and adjustment_source_type. 
 Second one is holding name of the model that was source of the adjustment (currently this can be Coupon, Shipment and Order), table name can be infered from these models. adjustment_source_id is holding id of the record in one of these columns.
 
-Adjustment source is used as source of data when recalculating the adjustment (algorithm that uses the data is provided by Calculator model).
+Every Adjustment have adjustment source (on the diagram these are Shipment and Coupon models),
+that is used to recalculate charge, and it should provide all information needed to do that
+(including providing calculator).
+
+Before checkout is completed, adjustments are recalculated every time order changes, after checkout
+all adjustments are frozen, and can be later modified, but will not be automatically recalculated.
 
 | Name | Type | Comments |
 | <u> id </u> | INTEGER | - |
@@ -112,9 +134,44 @@ Adjustment source is used as source of data when recalculating the adjustment (a
 |adjustment_source_type| VARCHAR(255) | This column holds name of class of adjustment source, table name can be derived from it in application |
 | order_id | INTEGER | |
 
-h4. Shipment
+h5. Calculator
+
+Calculator is a Model used for providing custom calculations for arbitrary models. Using STI correct class of calculator is selected, each descendant of Calculator has to ovverride #calculate method and provide a algorithm to calculate data. 
+Calculator instance can have additional preferences assigned using preferences table, these preferrences can be used with calculable record when performing calculations.
+
+| Name                 | Type         | Comments |
+|          <u> id </u> |      INTEGER |  - |
+|                 type | varchar(255) |  Type of the calculator used for Single Table Inheritance |
+|        calculable_id |      integer |  Id of record that uses calculator |
+|      calculable_type | varchar(255) |  Name of the model that uses calculator |
+
+h4. Shipment and Shipping Method
 
 <%= diagram('shipping') %>
+
+h5. Shipment
+
+Shipment represents one shippable package. Currently order can have many shipments, but there is currently no way to assign a line_items to shipment. This is subject to change, and v1.0 will allow to assign line_items from one order to several diffirent shipments.
+
+| Name                 | Type         | Comments |
+|            <u> id</u>|      INTEGER |  - |
+|             order_id |      integer |  - |
+|   shipping_method_id |      integer |  - |
+|             tracking | varchar(255) |  Tracking number that can be supplied by a shipping API |
+|               number | varchar(255) |  Internal shipment number |
+|                 cost | decimal(8,2) |  Cost of shipment, this represents actual shipment cost, not cost paid by user. This can be used to calculate gain/loss on shipping |
+|           shipped_at |     datetime |  Time at which shipment was actualy shiped. |
+|           address_id |      integer |  Address to which package was shipped |
+|                state | varchar(255) |  Status of shippment |
+
+h5. Shipping Method
+
+Shipping method is a model that represents a deliverer and method of delivery (UPS overnight. US Postal service etc.). Every shipping method has to provide a calculator that calculates a cost of shipment using that method, based on orders line_items.
+
+| Name                 | Type         | Comments |
+|                   id |      INTEGER |  - |
+|              zone_id |      integer |  Zone that this shipping method can be used with. |
+|                 name | varchar(255) |  Name of the shipping method |
 
 h3. Product and Variant
 
@@ -122,7 +179,7 @@ h3. Product and Variant
 
 h3. Taxonomies, Taxons and Product Groups
 
-<%= diagram('product_grouping') %>
+<%= diagram('products_grouping') %>
 
 h3. Taxation and Zone
 
